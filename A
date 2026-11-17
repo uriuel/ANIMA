@@ -1,0 +1,328 @@
+MIT License
+
+Copyright (c) 2026
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+# 🏮 Ánima · Noche de Cempasúchil
+
+Juego 2D hecho con HTML, CSS y JavaScript puro (Canvas). Eres una luciérnaga en un cementerio la noche de Día de Muertos: tu luz se apaga poco a poco y cada flor de cempasúchil la reaviva.
+
+## Cómo se juega
+
+- Solo ves dentro del círculo de tu propia luz.
+- Las sombras solo se ven completas dentro de tu resplandor; fuera de él solo se distinguen sus ojos.
+- Si una sombra te toca, pierdes luz. Si la luz llega a cero, pierdes.
+- Junta 15 flores para completar la ofrenda. Cada 5 flores sube la noche y las sombras se aceleran.
+
+## Controles
+
+- Teclado: flechas o W, A, S, D.
+- Celular: cruceta en pantalla o arrastrar el dedo sobre el juego.
+
+## Cómo jugarlo
+
+Abre `index.html` en tu navegador. No requiere instalación ni dependencias.
+
+## Publicar en GitHub Pages
+
+1. Sube `index.html` y `README.md` a un repositorio.
+2. Ve a **Settings → Pages**.
+3. En **Source** elige **Deploy from a branch**, la rama `main` y la carpeta `/ (root)`.
+4. Guarda. En un par de minutos el juego estará en `https://TU-USUARIO.github.io/NOMBRE-DEL-REPO/`.
+
+## Licencia
+
+MIT
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ánima · Noche de Cempasúchil</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;800&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{--fondo:#0A0E1F;--panel:#141a33;--borde:#2b3566;--texto:#F3EBDD;--suave:#A9A9C7;--flor:#FF9F1C;--luz:#D8FF7A;--magenta:#E5367F;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{color-scheme:dark}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--fondo);color:var(--texto);font-family:'Nunito',Arial,sans-serif;text-align:center;padding:20px 10px;min-height:100vh}
+main{max-width:820px;margin:auto}
+h1{font-family:'Fraunces',Georgia,serif;font-weight:800;font-size:44px;color:var(--flor);letter-spacing:1px}
+.sub{color:var(--suave);margin:6px 0 16px;font-size:15px}
+.hud{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:14px}
+.dato{background:var(--panel);border:1px solid var(--borde);border-radius:14px;padding:8px 18px;min-width:120px}
+.dato small{display:block;color:var(--suave);font-size:12px}
+.dato strong{font-size:22px;color:var(--flor)}
+.barra{height:8px;background:#0b0f22;border-radius:6px;margin-top:6px;overflow:hidden;width:110px}
+.barra i{display:block;height:100%;width:100%;background:var(--luz);transition:width .15s}
+.zona{position:relative;max-width:800px;margin:auto}
+canvas{display:block;width:100%;height:auto;background:#05070f;border:3px solid var(--flor);border-radius:16px;touch-action:none;user-select:none;-webkit-user-select:none}
+.pantalla{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(5,7,15,.88);border-radius:14px;padding:14px}
+.oculto{display:none!important}
+.tarjeta{background:var(--panel);border:2px solid var(--flor);border-radius:20px;padding:26px;max-width:400px}
+.tarjeta h2{font-family:'Fraunces',Georgia,serif;color:var(--flor);margin-bottom:12px;font-size:26px}
+.tarjeta p{line-height:1.6;color:var(--texto);margin-bottom:18px;font-size:15px}
+button{background:var(--flor);color:#2a1500;border:0;border-radius:24px;padding:12px 24px;font:800 16px 'Nunito',Arial,sans-serif;cursor:pointer;touch-action:manipulation}
+button:focus-visible{outline:3px solid var(--luz);outline-offset:3px}
+.pad{display:grid;grid-template-columns:repeat(3,62px);grid-template-rows:repeat(3,62px);gap:7px;justify-content:center;margin:16px auto 6px;touch-action:none}
+.pad button{width:62px;height:62px;padding:0;border-radius:16px;background:var(--panel);color:var(--flor);border:2px solid var(--borde);font-size:22px;box-shadow:0 4px 0 #070a18;touch-action:none;user-select:none;-webkit-user-select:none}
+.pad button.on{background:var(--flor);color:#2a1500;transform:translateY(3px);box-shadow:none}
+.u{grid-column:2;grid-row:1}.l{grid-column:1;grid-row:2}.r{grid-column:3;grid-row:2}.d{grid-column:2;grid-row:3}
+.ayuda{color:var(--suave);font-size:14px;line-height:1.5;max-width:520px;margin:10px auto 0}
+@media(max-width:600px){h1{font-size:34px}.dato{min-width:96px;padding:7px 10px}}
+</style>
+</head>
+<body>
+<main>
+<h1>Ánima</h1>
+<p class="sub">Noche de Cempasúchil: guía tu luz entre las tumbas.</p>
+
+<section class="hud">
+<div class="dato"><small>🌼 Flores</small><strong id="hFlores">0</strong></div>
+<div class="dato"><small>🕯️ Luz</small><div class="barra"><i id="hLuz"></i></div></div>
+<div class="dato"><small>🌙 Noche</small><strong id="hNoche">1</strong></div>
+</section>
+
+<section class="zona">
+<canvas id="j" width="800" height="500">Tu navegador no admite Canvas.</canvas>
+<div id="inicio" class="pantalla">
+<div class="tarjeta">
+<h2>Una luciérnaga, una ofrenda</h2>
+<p>Tu luz se apaga poco a poco. Cada flor de cempasúchil la reaviva. Las sombras solo se ven cuando te rozan su resplandor… y te roban luz si te tocan. Junta 15 flores para completar la ofrenda.</p>
+<button id="bIni">Encender la luz</button>
+</div></div>
+<div id="fin" class="pantalla oculto">
+<div class="tarjeta">
+<h2 id="fTit"></h2>
+<p id="fTxt"></p>
+<button id="bRei">Volver a intentar</button>
+</div></div>
+</section>
+
+<section class="pad" aria-label="Controles táctiles">
+<button class="u" data-k="ArrowUp" aria-label="Arriba">▲</button>
+<button class="l" data-k="ArrowLeft" aria-label="Izquierda">◀</button>
+<button class="r" data-k="ArrowRight" aria-label="Derecha">▶</button>
+<button class="d" data-k="ArrowDown" aria-label="Abajo">▼</button>
+</section>
+<p class="ayuda">Mueve con las flechas o con W, A, S, D. En celular usa los botones o arrastra el dedo sobre el juego.</p>
+</main>
+
+<script>
+const c=document.getElementById('j'),x=c.getContext('2d'),W=800,H=500;
+const off=document.createElement('canvas');off.width=W;off.height=H;const ox=off.getContext('2d');
+const $=id=>document.getElementById(id);
+const hF=$('hFlores'),hL=$('hLuz'),hN=$('hNoche');
+const P={x:W/2,y:H/2,v:230};
+const flor={x:200,y:150};
+let flores=0,luz=100,noche=1,on=false,inv=0,t=0,last=0,sombras=[],tumbas=[],estrellas=[],dest=null;
+const keys={};
+const META=15;
+
+function rnd(a,b){return a+Math.random()*(b-a)}
+function nuevaSombra(){
+  let sx,sy;
+  do{sx=rnd(40,W-40);sy=rnd(40,H-40)}while(Math.hypot(sx-P.x,sy-P.y)<200);
+  const a=rnd(0,6.28),v=rnd(70,110)*(1+.12*(noche-1));
+  return{x:sx,y:sy,vx:Math.cos(a)*v,vy:Math.sin(a)*v,r:17,f:rnd(0,6)};
+}
+function moverFlor(){
+  do{flor.x=rnd(35,W-35);flor.y=rnd(35,H-35)}while(Math.hypot(flor.x-P.x,flor.y-P.y)<150);
+}
+function crearEscena(){
+  tumbas=[];estrellas=[];
+  for(let i=0;i<14;i++)tumbas.push({x:rnd(30,W-50),y:rnd(40,H-40),w:rnd(18,28),h:rnd(24,38)});
+  for(let i=0;i<70;i++)estrellas.push({x:rnd(0,W),y:rnd(0,H),r:rnd(.4,1.5)});
+}
+function hud(){
+  hF.textContent=flores;hN.textContent=noche;
+  hL.style.width=Math.max(0,luz)+'%';
+}
+function radio(){return 52+Math.max(0,luz)*1.15+Math.sin(t*9)*2.5}
+
+function fondo(){
+  const g=x.createLinearGradient(0,0,0,H);g.addColorStop(0,'#141a3d');g.addColorStop(1,'#1a1030');
+  x.fillStyle=g;x.fillRect(0,0,W,H);
+  x.fillStyle='#fff';
+  estrellas.forEach(e=>{x.globalAlpha=.5;x.beginPath();x.arc(e.x,e.y,e.r,0,6.28);x.fill()});
+  x.globalAlpha=1;
+  tumbas.forEach(m=>{
+    x.fillStyle='#3a3f68';
+    x.beginPath();x.moveTo(m.x,m.y+m.h);x.lineTo(m.x,m.y+m.w/2);
+    x.arc(m.x+m.w/2,m.y+m.w/2,m.w/2,Math.PI,0);x.lineTo(m.x+m.w,m.y+m.h);x.closePath();x.fill();
+    x.strokeStyle='#5a6096';x.lineWidth=2;
+    x.beginPath();x.moveTo(m.x+m.w/2,m.y+m.w/2-4);x.lineTo(m.x+m.w/2,m.y+m.w/2+8);
+    x.moveTo(m.x+m.w/2-4,m.y+m.w/2);x.lineTo(m.x+m.w/2+4,m.y+m.w/2);x.stroke();
+  });
+}
+function dibSombra(s,visible){
+  x.save();x.translate(s.x,s.y);
+  const w=Math.sin(t*5+s.f)*2;
+  if(visible){
+    x.fillStyle='#2a1146';x.shadowColor='#E5367F';x.shadowBlur=14;
+    x.beginPath();x.arc(0,-2,s.r,Math.PI,0);
+    x.lineTo(s.r,s.r);
+    for(let i=0;i<4;i++){x.lineTo(s.r-(i+.5)*s.r/2,s.r-6+w);x.lineTo(s.r-(i+1)*s.r/2,s.r)}
+    x.closePath();x.fill();x.shadowBlur=0;
+  }
+  x.globalAlpha=visible?1:.3+.2*Math.sin(t*4+s.f);
+  x.fillStyle='#FF5FA2';
+  x.beginPath();x.arc(-6,-4,2.6,0,6.28);x.arc(6,-4,2.6,0,6.28);x.fill();
+  x.restore();
+}
+function dibFlor(){
+  x.save();x.translate(flor.x,flor.y);x.rotate(t*.4);
+  x.shadowColor='#FF9F1C';x.shadowBlur=14+4*Math.sin(t*4);
+  for(let i=0;i<10;i++){
+    x.rotate(6.283/10);
+    x.fillStyle=i%2?'#FF9F1C':'#FFB84D';
+    x.beginPath();x.ellipse(0,-10,5,9,0,0,6.28);x.fill();
+  }
+  x.shadowBlur=0;x.fillStyle='#B34700';x.beginPath();x.arc(0,0,5,0,6.28);x.fill();
+  x.restore();
+}
+function dibJugador(){
+  x.save();x.translate(P.x,P.y);
+  if(inv>0&&Math.floor(t*14)%2)x.globalAlpha=.4;
+  const ala=Math.sin(t*40)*.35;
+  x.fillStyle='rgba(235,245,255,.7)';
+  x.save();x.rotate(-.7+ala);x.beginPath();x.ellipse(-9,-4,10,5,0,0,6.28);x.fill();x.restore();
+  x.save();x.rotate(.7-ala);x.beginPath();x.ellipse(9,-4,10,5,0,0,6.28);x.fill();x.restore();
+  x.fillStyle='#2a2340';x.beginPath();x.ellipse(0,-4,5,8,0,0,6.28);x.fill();
+  x.shadowColor='#D8FF7A';x.shadowBlur=22;x.fillStyle='#D8FF7A';
+  x.beginPath();x.ellipse(0,8,6,8,0,0,6.28);x.fill();
+  x.restore();
+}
+function oscuridad(){
+  ox.globalCompositeOperation='source-over';
+  ox.clearRect(0,0,W,H);
+  ox.fillStyle='rgba(3,4,12,.95)';ox.fillRect(0,0,W,H);
+  ox.globalCompositeOperation='destination-out';
+  const R=radio(),g=ox.createRadialGradient(P.x,P.y,0,P.x,P.y,R);
+  g.addColorStop(0,'rgba(0,0,0,1)');g.addColorStop(.6,'rgba(0,0,0,.92)');g.addColorStop(1,'rgba(0,0,0,0)');
+  ox.fillStyle=g;ox.beginPath();ox.arc(P.x,P.y,R,0,6.28);ox.fill();
+  ox.globalCompositeOperation='source-over';
+  x.drawImage(off,0,0);
+}
+function dibujar(){
+  fondo();
+  const R=radio();
+  sombras.forEach(s=>{if(Math.hypot(s.x-P.x,s.y-P.y)<R*.85)dibSombra(s,true)});
+  oscuridad();
+  sombras.forEach(s=>{if(Math.hypot(s.x-P.x,s.y-P.y)>=R*.85)dibSombra(s,false)});
+  dibFlor();
+  dibJugador();
+}
+
+function mover(d){
+  let mx=0,my=0;
+  if(keys.arrowleft||keys.a)mx--;
+  if(keys.arrowright||keys.d)mx++;
+  if(keys.arrowup||keys.w)my--;
+  if(keys.arrowdown||keys.s)my++;
+  if(mx||my){
+    const n=Math.hypot(mx,my);P.x+=mx/n*P.v*d;P.y+=my/n*P.v*d;
+  }else if(dest){
+    const dx=dest.x-P.x,dy=dest.y-P.y,di=Math.hypot(dx,dy);
+    if(di>5){const p=Math.min(di,P.v*d);P.x+=dx/di*p;P.y+=dy/di*p}
+  }
+  P.x=Math.max(12,Math.min(W-12,P.x));P.y=Math.max(12,Math.min(H-12,P.y));
+}
+function actualizar(d){
+  t+=d;
+  mover(d);
+  if(inv>0)inv-=d;
+  luz-=d*(3.4+.5*(noche-1));
+  sombras.forEach(s=>{
+    s.x+=s.vx*d;s.y+=s.vy*d;
+    if(s.x<s.r||s.x>W-s.r){s.vx*=-1;s.x=Math.max(s.r,Math.min(W-s.r,s.x))}
+    if(s.y<s.r||s.y>H-s.r){s.vy*=-1;s.y=Math.max(s.r,Math.min(H-s.r,s.y))}
+    if(inv<=0&&Math.hypot(s.x-P.x,s.y-P.y)<s.r+9){
+      luz-=25;inv=1.2;
+      const n=nuevaSombra();s.x=n.x;s.y=n.y;s.vx=n.vx;s.vy=n.vy;
+    }
+  });
+  if(Math.hypot(flor.x-P.x,flor.y-P.y)<22){
+    flores++;luz=Math.min(100,luz+22);moverFlor();
+    const nn=Math.floor(flores/5)+1;
+    if(nn>noche){noche=nn;sombras.forEach(s=>{s.vx*=1.12;s.vy*=1.12});if(sombras.length<6)sombras.push(nuevaSombra())}
+  }
+  hud();
+  if(flores>=META)return fin(true);
+  if(luz<=0){luz=0;hud();fin(false)}
+}
+function fin(ok){
+  on=false;
+  $('fTit').textContent=ok?'¡Ofrenda completa!':'Tu luz se apagó';
+  $('fTxt').textContent=ok?'Con '+flores+' flores guiaste a las almas a casa. Feliz noche.':'Juntaste '+flores+' de '+META+' flores. La noche sigue larga: inténtalo otra vez.';
+  $('fin').classList.remove('oculto');
+}
+function loop(now){
+  if(!on)return;
+  const d=Math.min((now-last)/1000,.033);last=now;
+  actualizar(d);if(on||flores>=META||luz<=0)dibujar();
+  if(on)requestAnimationFrame(loop);
+}
+function limpiar(){
+  for(const k in keys)keys[k]=false;
+  document.querySelectorAll('.pad button').forEach(b=>b.classList.remove('on'));
+  dest=null;
+}
+function iniciar(){
+  flores=0;luz=100;noche=1;inv=0;t=0;
+  P.x=W/2;P.y=H/2;limpiar();
+  sombras=[nuevaSombra(),nuevaSombra(),nuevaSombra()];
+  moverFlor();hud();crearEscena();
+  $('inicio').classList.add('oculto');$('fin').classList.add('oculto');
+  on=true;last=performance.now();requestAnimationFrame(loop);
+}
+
+addEventListener('keydown',e=>{
+  if(e.key.startsWith('Arrow'))e.preventDefault();
+  keys[e.key.toLowerCase()]=true;
+});
+addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false});
+addEventListener('blur',limpiar);
+
+document.querySelectorAll('.pad button').forEach(b=>{
+  const k=b.dataset.k.toLowerCase();
+  const on_=e=>{e.preventDefault();keys[k]=true;b.classList.add('on')};
+  const off_=e=>{e.preventDefault();keys[k]=false;b.classList.remove('on')};
+  b.addEventListener('pointerdown',on_);
+  ['pointerup','pointercancel','pointerleave'].forEach(ev=>b.addEventListener(ev,off_));
+  b.addEventListener('contextmenu',e=>e.preventDefault());
+});
+
+function punto(e){
+  const r=c.getBoundingClientRect();
+  dest={x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height};
+}
+c.addEventListener('pointerdown',e=>{if(!on)return;c.setPointerCapture(e.pointerId);punto(e)});
+c.addEventListener('pointermove',e=>{if(on&&dest&&e.buttons)punto(e)});
+['pointerup','pointercancel'].forEach(ev=>c.addEventListener(ev,()=>{dest=null}));
+
+$('bIni').addEventListener('click',iniciar);
+$('bRei').addEventListener('click',iniciar);
+crearEscena();dibujar();
+</script>
+</body>
+</html>
